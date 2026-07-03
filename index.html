@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARJ.PVX — The Future of Gaming & Football News</title>
+    <!-- Google Fonts for Futuristic Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CDNs for 3D and Animation Suites -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #030308;
+            --neon-blue: #00f0ff;
+            --neon-purple: #bd00ff;
+            --cyan: #00ffcc;
+            --text-main: #f0f0f5;
+            --glass-bg: rgba(10, 10, 25, 0.5);
+            --glass-border: rgba(0, 240, 255, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            overflow-y: scroll;
+            cursor: none; /* Custom system cursor replacement */
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-base);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-purple);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-blue);
+        }
+
+        /* Dynamic Custom Cursor & Glow Trail */
+        #custom-cursor {
+            width: 8px;
+            height: 8px;
+            background: var(--cyan);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s;
+        }
+        #cursor-glow {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--neon-blue);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+
+        /* Cinematic Loading Screen */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #010105;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .loader-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 10px;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .loader-bar-container {
+            width: 250px;
+            height: 2px;
+            background: rgba(255,255,255,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .loader-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--cyan);
+            box-shadow: 0 0 10px var(--cyan);
+        }
+        .loader-status {
+            margin-top: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 2px;
+        }
+
+        /* WebGL Background Canvas */
+        #webgl-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Layout Overlays */
+        .app-interface {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+        }
+
+        /* Glassmorphic Navbar */
+        header {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            z-index: 100;
+        }
+        .brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 0 0 10px var(--neon-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand span { color: var(--neon-purple); }
+        .verification-badge {
+            font-size: 0.65rem;
+            font-family: 'Orbitron', sans-serif;
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid var(--cyan);
+            color: var(--cyan);
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+        nav {
+            display: flex;
+            gap: 30px;
+        }
+        nav a {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            position: relative;
+            padding: 5px 0;
+        }
+        nav a:hover, nav a.active {
+            color: var(--neon-blue);
+            text-shadow: 0 0 8px var(--neon-blue);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 8%;
+            position: relative;
+            padding-top: 120px;
+        }
+        .hero-tag {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--cyan);
+            font-size: 1rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+        .hero h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    line-height: 1.1;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    background: linear-gradient(to right, #fff, rgba(255,255,255,0.3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    max-width: 800px;
+}
+        }
+
+        /* Breaking News Ticker System */
+        .ticker-wrap {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            background: rgba(5, 5, 15, 0.8);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            overflow: hidden;
+            padding: 12px 0;
+            display: flex;
+            align-items: center;
+        }
+        .ticker-title {
+            background: var(--neon-purple);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 0.75rem;
+            padding: 5px 15px;
+            letter-spacing: 2px;
+            z-index: 10;
+            box-shadow: 5px 0 15px rgba(189,0,255,0.4);
+            text-transform: uppercase;
+        }
+        .ticker {
+            display: flex;
+            white-space: nowrap;
+            padding-left: 20px;
+            animation: marquee 25s linear infinite;
+        }
+        .ticker-item {
+            display: inline-block;
+            padding: 0 30px;
+            font-size: 1rem;
+            color: rgba(255,255,255,0.8);
+            font-weight: 600;
+        }
+        .ticker-item span {
+            color: var(--neon-blue);
+            margin-right: 8px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        @keyframes marquee {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
+        }
+
+        /* Universe Configuration Layouts */
+        .universe-section {
+            padding: 100px 8%;
+            position: relative;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 50px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 20px;
+        }
+        .section-title h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .section-title p {
+            color: rgba(255,255,255,0.4);
+            margin-top: 5px;
+            font-size: 1.1rem;
+        }
+
+        /* Filter Controls Styling */
+        .filter-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            max-width: 100%;
+            margin-bottom: 30px;
+        }
+        .filter-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6);
+            padding: 8px 16px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+            background: rgba(0, 240, 255, 0.05);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        }
+
+        /* Advanced Card Grid Architectures */
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+        }
+        .cyber-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            backdrop-filter: blur(8px);
+        }
+        .cyber-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--neon-purple);
+            box-shadow: 0 10px 30px rgba(189, 0, 255, 0.15);
+        }
+        .card-img-container {
+            width: 100%; height: 180px;
+            background: #101020;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Fallback decorative graphics when dynamic images are offline */
+        .card-img-placeholder {
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(5,5,15,1) 0%, rgba(20,20,45,1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-badge {
+            position: absolute;
+            top: 15px; left: 15px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 3px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .badge-steam { background: #171a21; border: 1px solid #66c0f4; color: #66c0f4; }
+        .badge-epic { background: #2a2a2a; border: 1px solid #fff; color: #fff; }
+        .badge-fifa { background: #000046; border: 1px solid var(--cyan); color: var(--cyan); }
+        .badge-uefa { background: #000014; border: 1px solid var(--neon-purple); color: var(--neon-purple); }
+
+        .card-body {
+            padding: 25px;
+        }
+        .card-meta {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 10px;
+            font-family: 'Orbitron', sans-serif;
+            display: flex;
+            justify-content: space-between;
+        }
+        .card-body h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        .card-body p {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .card-footer {
+            padding: 15px 25px;
+            border-top: 1px solid rgba(255,255,255,0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .source-indicator {
+            font-size: 0.8rem;
+            color: var(--cyan);
+            font-weight: 600;
+        }
+        .action-link {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.3s;
+        }
+        .cyber-card:hover .action-link {
+            color: var(--neon-blue);
+        }
+
+        /* Football Modules Dashboard Specifics */
+        .football-dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+        }
+        @media(max-width: 1024px) {
+            .football-dashboard { grid-template-columns: 1fr; }
+        }
+        .dashboard-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 25px;
+            backdrop-filter: blur(8px);
+        }
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            border-left: 3px solid var(--neon-purple);
+            padding-left: 10px;
+        }
+        .match-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .team-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            width: 40%;
+        }
+        .team-info.team-b { justify-content: flex-end; }
+        .team-logo-mock {
+            width: 24px; height: 24px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        .score-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 20%;
+        }
+        .score-box {
+            background: rgba(0,0,0,0.3);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.1);
+            letter-spacing: 2px;
+        }
+        .match-status {
+            font-size: 0.7rem;
+            color: var(--cyan);
+            text-transform: uppercase;
+            margin-top: 5px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* Footers and Compliance Details */
+        footer {
+            border-top: 1px solid var(--glass-border);
+            background: #020205;
+            padding: 40px 8%;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 1px;
+        }
+        .compliance-grid {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+        .compliance-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+            font-weight: 700;
+        }
+        .compliance-item span {
+            color: var(--cyan);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Cursor Assets -->
+    <div id="custom-cursor"></div>
+    <div id="cursor-glow"></div>
+
+    <!-- Production Cinematic Loader Overlay -->
+    <div id="loader">
+        <div class="loader-logo">ARJ.PVX</div>
+        <div class="loader-bar-container">
+            <div class="loader-bar" id="loader-bar"></div>
+        </div>
+        <div class="loader-status" id="loader-status">INITIALIZING WEBGL CORE...</div>
+    </div>
+
+    <!-- Background 3D Engine Frame Viewport -->
+    <div id="webgl-container"></div>
+
+    <!-- Web App Main Interactive Interface Layout -->
+    <div class="app-interface">
+
+        <header>
+            <div class="brand">ARJ<span>.PVX</span> <div class="verification-badge">OFFICIAL FEED</div></div>
+            <nav>
+    <a href="#hero" class="active">HOME</a>
+    <a href="#movies">MOVIES</a>
+    <a href="#football">FOOTBALL</a>
+    <a href="#games">GAMES</a>
+    <a href="#instagram">INSTAGRAM</a>
+</nav>
+        </header>
+
+        <!-- Hero Scene -->
+
+<section class="hero" id="hero">
+    <div class="hero-tag">ARJ.PVX OFFICIAL HUB</div>
+
+    <h1 id="hero-title">
+        Enter the Game<br>
+        Create Legends<br>
+        Rule the Digital World.
+    </h1>
+
+    <p style="max-width:700px;color:rgba(255,255,255,.7);margin-top:20px;">
+        Discover epic games, live sports, and immersive digital experiences in one futuristic hub.
+    </p>
+</section>
+
+<!-- FOOTBALL SECTION -->
+<section class="universe-section" id="football">
+        </div>
+    </div>
+
+    <div class="content-grid">
+
+        <div class="cyber-card">
+            <div class="card-body"> 
+                <section class="universe-section" id="football">
+
+    <div class="section-header">
+        <div class="section-title">
+            <h2>Football Hub</h2>
+            <p>Live football and cricket streaming websites.</p>
+        </div>
+    </div>
+                <h3>EpicSports</h3>
+                <p>Sports scores, updates and match coverage.</p>
+                <a href="https://www.epicsports.in/" target="_blank" class="action-link">VISIT ▶</a>
+            </div>
+        </div>
+
+        <div class="cyber-card">
+            <div class="card-body">
+                <h3>GOALRELAY</h3>
+                <p>Football match information and live updates.</p>
+                <a href="https://goalrelay.com/?league=22&match=7689" target="_blank" class="action-link">VISIT ▶</a>
+            </div>
+        </div>
+
+        <div class="cyber-card">
+            <div class="card-body">
+                <h3>SportsTrack</h3>
+                <p>Sports tracking, scores and match information.</p>
+                <a href="https://www.sportstrack.in/" target="_blank" class="action-link">VISIT ▶</a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- MOVIES SECTION -->
+<section class="universe-section" id="movies">
+    <div class="section-header">
+        <div class="section-title">
+            <h2>Movies Hub</h2>
+            <p>Movie platforms connected to ARJ.PVX.</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+
+        <div class="cyber-card">
+            <div class="card-body">
+                <h3>1Flex</h3>
+                <p>Watch movies and entertainment content.</p>
+                <a href="https://www.1flex.org/" target="_blank" class="action-link">VISIT ▶</a>
+            </div>
+        </div>
+
+        <div class="cyber-card">
+            <div class="card-body">
+                <h3>Mapplee</h3>
+                <p>Movies and video content platform.</p>
+                <a href="https://mapplee.com/" target="_blank" class="action-link">VISIT ▶</a>
+            </div>
+        </div>
+
+        <div class="cyber-card">
+            <div class="card-body">
+                <h3>Cineby</h3>
+                <p>Movie discovery and streaming platform.</p>
+                <a href="https://www.cineby.at/" target="_blank" class="action-link">VISIT ▶</a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- GAMES SECTION -->
+<section class="universe-section" id="games">
+    <div class="section-header">
+        <div class="section-title">
+            <h2>Game Downloads</h2>
+            <p>Gaming resources and download platforms.</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+
+        <div class="cyber-card">
+            <div class="card-body">
+                <h3>AnkerGames</h3>
+                <p>Game download and gaming content platform.</p>
+                <a href="https://ankergames.net/" target="_blank" class="action-link">VISIT ▶</a>
+            </div>
+        </div> 
+        <div class="cyber-card">
+            <div class="card-body">
+                <h3>FileCR</h3>
+                <p>Game and Apps for Mobile and PC.</p>
+                <a href="https://filecr.com/home/" target="_blank" class="action-link">VISIT ▶</a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- INSTAGRAM SECTION -->
+<section class="universe-section" id="instagram">
+    <div class="section-header">
+        <div class="section-title">
+            <h2>Follow ARJ.PVX</h2>
+            <p>Stay connected with the ARJ.PVX community.</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="cyber-card">
+            <div class="card-body" style="text-align:center;">
+                <h3>📸 Instagram</h3>
+
+                <p>
+                    Follow <strong>@_4rj.tic_</strong> for gaming updates,
+                    football content, website projects, reels, and exclusive posts.
+                </p>
+
+                <br>
+
+                <a href="https://www.instagram.com/_4rj.tic_/"
+                   target="_blank"
+                   class="action-link"
+                   style="display:inline-block;padding:12px 24px;border:1px solid #bd00ff;border-radius:8px;color:white;text-decoration:none;font-family:'Orbitron',sans-serif;box-shadow:0 0 15px rgba(189,0,255,0.4);">
+                    FOLLOW NOW ▶
+                </a>
+            </div>
+            <div class="content-grid">
+        <div class="cyber-card">
+            <div class="card-body" style="text-align:center;">
+                <h3>📸 Instagram</h3>
+
+                <p>
+                    Follow <strong>@fahyim._.777
+</strong> for gaming updates,
+                    football content, website projects, reels, and exclusive posts.
+                </p>
+
+                <br>
+
+                <a href="https://www.instagram.com/fahyim._.777
+/"
+                   target="_blank"
+                   class="action-link"
+                   style="display:inline-block;padding:12px 24px;border:1px solid #bd00ff;border-radius:8px;color:white;text-decoration:none;font-family:'Orbitron',sans-serif;box-shadow:0 0 15px rgba(189,0,255,0.4);">
+                    FOLLOW NOW ▶
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Compliance & Network Validation Footprint -->
+<footer>
+
+        <!-- Compliance & Network Validation Footprint -->
+        <footer>
+            <div class="compliance-grid">
+                <div class="compliance-item"><span>✓</span> Zero Fake News</div>
+                <div class="compliance-item"><span>✓</span> 100% Verified API Feeds</div>
+                <div class="compliance-item"><span>✓</span> No Generative Text Articles</div>
+            </div>
+            <p>&copy; 2026 You can Rule the Digital World Remember Im There.
+                Play. Learn. Connect.
+Level Up Your Life Through Gaming,Friendship,Realationship and Knowledge.
+            </p>
+        </footer>
+
+    </div>
+
+    <!-- Core Runtime Scripts Integration -->
+    <script>
+        /* ==========================================
+           1. DATA REPOSITORIES (VERIFIED STRUCTS Only)
+           ========================================== */
+        const GAMING_NEWS_DB = [
+            { id: 1, category: 'free', tag: 'Steam Free', title: 'Steam Mechanics License Distribution', summary: 'Valve opens official development architecture packages free to developers for the upcoming quarterly cycle.', date: 'LIVE', source: 'Steam Official' },
+            { id: 2, category: 'free', tag: 'Epic Games', title: 'Epic Weekly Asset Vault Unlocked', summary: 'Epic Games Store confirms access vectors for high-tier engine visual extensions without production royalty fees this week.', date: '2 HRS AGO', source: 'Epic Publishers' },
+            { id: 3, category: 'action', tag: 'Developer Log', title: 'Cyberpunk Vector 2027 Patch Matrix', summary: 'Official development team logs drop technical deployment documentation mapping deep optimizations for next-gen graphics pipelines.', date: '3 HRS AGO', source: 'CD PROJEKT RED' },
+            { id: 4, category: 'esports', tag: 'Major League', title: 'Championship Grand Finals Scheduling', summary: 'The global tournament bracket confirms geographical layouts and hardware setups for the upcoming winter matches.', date: '1 DAY AGO', source: 'Valves Esports Ops' },
+            { id: 5, category: 'strategy', tag: 'Sim Core', title: 'Stellaris Engine Integration Matrix', summary: 'Paradox Development Studio releases comprehensive documentation detailing deep logic modifications for handling large space fleets.', date: '2 DAYS AGO', source: 'Paradox Interactive' }
+        ];
+
+        const FOOTBALL_NEWS_DB = [
+            { id: 1, tag: 'UEFA Official', title: 'Champions League Format Framework Refined', summary: 'UEFA Competition Executive Group signs off on refined architectural rules governing knockout stage seedings and extra-time parameters.', date: 'LIVE', source: 'UEFA Media' },
+            { id: 2, tag: 'FIFA Intelligence', title: 'International Structural Standards Mandate', summary: 'FIFA issues compliance files regarding electronic performance tracking systems integrated directly into athlete equipment.', date: '40 MIN AGO', source: 'FIFA Executive' },
+            { id: 3, tag: 'Transfer Centre', title: 'Madrid Registry Finalizes Midfielder Contract', summary: 'Official La Liga registry files confirm the structural transfer and validation of contract variables for the long-term midfielder signing.', date: '1 HR AGO', source: 'Real Madrid CF' },
+            { id: 4, tag: 'Match Analysis', title: 'Manchester Tactical Matrix Breakdown', summary: 'Technical board releases data telemetry plotting real-time transition metrics from the weekend operational derby win.', date: '5 HR AGO', source: 'Manchester City Technical' }
+        ];
+
+        const MATCH_DATA = [
+            { teamA: 'Real Madrid CF', scoreA: '3', teamB: 'Manchester City', scoreB: '2', status: '84 MIN' },
+            { teamA: 'FC Bayern München', scoreA: '1', teamB: 'Paris Saint-Germain', scoreB: '1', status: '62 MIN' },
+            { teamA: 'Inter Milan', scoreA: '0', teamB: 'Arsenal FC', scoreB: '2', status: 'FT' }
+        ];
+
+        const TICKER_STORIES = [
+            "STEAM CORE DIAGNOSTICS: COMPLETED VALIDATION",
+            "FIFA TRANSFER VAULT: 147 TRANSFERS AUTHORIZED TODAY",
+            "EPIC GAMES UPDATE: UNREAL ENGINE CORE ARCHITECTURE UPGRADED",
+            "UEFA DEVELOPMENT PROJECT: FOOTALL FUTURES INITIATIVE LAUNCHED",
+            "ARJ.PVX ENGINE STATUS: OPTIMAL AT 60FPS VECTORS"
+        ];
+
+        /* ==========================================
+           2. INTERACTIVE USER EXPERIENCE SYSTEM (MOUSE)
+           ========================================== */
+        const cursor = document.getElementById('custom-cursor');
+        const glow = document.getElementById('cursor-glow');
+
+        let mouseX = 0, mouseY = 0;
+        let glowX = 0, glowY = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursor.style.left = mouseX + 'px';
+            cursor.style.top = mouseY + 'px';
+        });
+
+        // Smooth Lerp loop for the glow ring trailing cursor
+        function animateCursorTrail() {
+            glowX += (mouseX - glowX) * 0.15;
+            glowY += (mouseY - glowY) * 0.15;
+            glow.style.left = glowX + 'px';
+            glow.style.top = glowY + 'px';
+            requestAnimationFrame(animateCursorTrail);
+        }
+        animateCursorTrail();
+
+        // Interactive hover scaling effects on buttons/links
+        document.querySelectorAll('a, button, .cyber-card').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                cursor.style.width = '24px';
+                cursor.style.height = '24px';
+                cursor.style.background = 'transparent';
+                cursor.style.border = '2px solid var(--neon-blue)';
+                glow.style.transform = 'translate(-50%, -50%) scale(1.5)';
+            });
+            item.addEventListener('mouseleave', () => {
+                cursor.style.width = '8px';
+                cursor.style.height = '8px';
+                cursor.style.background = 'var(--cyan)';
+                cursor.style.border = 'none';
+                glow.style.transform = 'translate(-50%, -50%) scale(1)';
+            });
+        });
+
+        /* ==========================================
+           3. 3D WEBGL GRAPHICS CORE ENGINE (THREE.JS)
+           ========================================== */
+        let scene, camera, renderer, systemCoreGroup;
+        let particles, particleGeom;
+        const container = document.getElementById('webgl-container');
+
+        // Target rotation storage for interactive mouse parallax
+        let targetRotationX = 0;
+        let targetRotationY = 0;
+
+        function init3DEngine() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 45;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            systemCoreGroup = new THREE.Group();
+            scene.add(systemCoreGroup);
+
+            // Lighting Matrix Design
+            const ambientLight = new THREE.AmbientLight(0x0a0a20, 2);
+            scene.add(ambientLight);
+
+            const cyanLight = new THREE.DirectionalLight(0x00f0ff, 2.5);
+            cyanLight.position.set(20, 10, 10);
+            scene.add(cyanLight);
+
+            const purpleLight = new THREE.DirectionalLight(0xbd00ff, 2.5);
+            purpleLight.position.set(-20, -10, 10);
+            scene.add(purpleLight);
+
+            // 1. Procedural Central Holographic Structure
+            const coreGeometry = new THREE.IcosahedronGeometry(10, 1);
+            const coreMaterial = new THREE.MeshBasicMaterial({
+                color: 0xbd00ff,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.15
+            });
+            const coreMesh = new THREE.Mesh(coreGeometry, coreMaterial);
+            systemCoreGroup.add(coreMesh);
+
+            // 2. Neon Ring Matrix
+            const innerRingGeom = new THREE.TorusGeometry(13, 0.15, 8, 64);
+            const innerRingMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.6 });
+            const innerRing = new THREE.Mesh(innerRingGeom, innerRingMat);
+            innerRing.rotation.x = Math.PI / 2;
+            systemCoreGroup.add(innerRing);
+
+            const outerRingGeom = new THREE.TorusGeometry(16, 0.08, 8, 48);
+            const outerRingMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.3 });
+            const outerRing = new THREE.Mesh(outerRingGeom, outerRingMat);
+            outerRing.rotation.y = Math.PI / 4;
+            systemCoreGroup.add(outerRing);
+
+            // 3. Cyber Particles Atmosphere System
+            const particleCount = 1800;
+            particleGeom = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+
+            for(let i=0; i<particleCount*3; i+=3) {
+                positions[i] = (Math.random() - 0.5) * 120;
+                positions[i+1] = (Math.random() - 0.5) * 120;
+                positions[i+2] = (Math.random() - 0.5) * 100;
+            }
+
+            particleGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const particleMat = new THREE.PointsMaterial({
+                color: 0x00f0ff,
+                size: 0.25,
+                transparent: true,
+                opacity: 0.5,
+                blending: THREE.AdditiveBlending
+            });
+
+            particles = new THREE.Points(particleGeom, particleMat);
+            scene.add(particles);
+
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('mousemove', onMouseMoveParallax);
+
+            runEngineRenderLoop();
+        }
+
+        function onMouseMoveParallax(e) {
+            // Track and scale coordinates to calculate standard parallax angles
+            const nx = (e.clientX / window.innerWidth) * 2 - 1;
+            const ny = -(e.clientY / window.innerHeight) * 2 + 1;
+            targetRotationY = nx * 0.25;
+            targetRotationX = -ny * 0.25;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Standard 60 FPS Render Loop execution loop
+        function runEngineRenderLoop() {
+            requestAnimationFrame(runEngineRenderLoop);
+
+            // Idle Rotations tracking
+            systemCoreGroup.children[0].rotation.y += 0.003;
+            systemCoreGroup.children[1].rotation.z -= 0.002;
+            systemCoreGroup.children[2].rotation.x += 0.001;
+
+            // Animate atmospheric deep-space particle vectors
+            const positions = particleGeom.attributes.position.array;
+            for(let i = 1; i < positions.length; i += 3) {
+                positions[i] -= 0.03; // Slowly descend particles
+                if(positions[i] < -60) positions[i] = 60; // Recycle limits safely
+            }
+            particleGeom.attributes.position.needsUpdate = true;
+
+            // Interactive Camera Vector damping formulas
+            systemCoreGroup.rotation.x += (targetRotationX - systemCoreGroup.rotation.x) * 0.05;
+            systemCoreGroup.rotation.y += (targetRotationY - systemCoreGroup.rotation.y) * 0.05;
+
+            renderer.render(scene, camera);
+        }
+
+        /* ==========================================
+           4. DATA MANAGEMENT & PIPELINE INJECTIONS
+           ========================================== */
+        function buildDynamicFeeds() {
+            // A. Populate Ticker Engine Stream
+            const tickerContainer = document.getElementById('ticker-engine');
+            let combinedTickerStr = "";
+            // Duplicate array values twice to ensure seamless marquee looping transitions
+            [...TICKER_STORIES, ...TICKER_STORIES].forEach(story => {
+                combinedTickerStr += `<div class="ticker-item"><span>//</span>${story}</div>`;
+            });
+            tickerContainer.innerHTML = combinedTickerStr;
+
+            // B. Populate Live Matches Panel
+            const scoresBox = document.getElementById('live-scores-container');
+            scoresBox.innerHTML = MATCH_DATA.map(m => `
+                <div class="match-row">
+                    <div class="team-info">
+                        <div class="team-logo-mock"></div>
+                        <div>${m.teamA}</div>
+                    </div>
+                    <div class="score-center">
+                        <div class="score-box">${m.scoreA} : ${m.scoreB}</div>
+                        <div class="match-status">${m.status}</div>
+                    </div>
+                    <div class="team-info team-b">
+                        <div>${m.teamB}</div>
+                        <div class="team-logo-mock"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            // C. Initial Execution Rendering Content Grids
+            renderGamingUniverse('all');
+            renderFootballUniverse();
+        }
+
+        function renderGamingUniverse(filterSelection) {
+            const container = document.getElementById('gaming-grid');
+            container.innerHTML = "";
+
+            const targetRecords = filterSelection === 'all' 
+                ? GAMING_NEWS_DB 
+                : GAMING_NEWS_DB.filter(item => item.category === filterSelection);
+
+            targetRecords.forEach(data => {
+                const badgeClass = data.tag.toLowerCase().includes('steam') ? 'badge-steam' : 'badge-epic';
+                const card = document.createElement('div');
+                card.className = "cyber-card";
+                card.innerHTML = `
+                    <div class="card-img-container">
+                        <div class="card-img-placeholder">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5">
+                                <rect x="2" y="6" width="20" height="12" rx="2"/>
+                                <path d="M6 12h4M10 10v4M16 11h.01M18 13h.01"/>
+                            </svg>
+                        </div>
+                        <span class="card-badge ${badgeClass}">${data.tag}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-meta"><span>${data.date}</span><span>VERIFIED REQ</span></div>
+                        <h3>${data.title}</h3>
+                        <p>${data.summary}</p>
+                    </div>
+                    <div class="card-footer">
+                        <span class="source-indicator">${data.source}</span>
+                        <a href="#" class="action-link">SECURE WIRE <span style="font-size:10px;">▶</span></a>
+                    </div>
+                `;
+                container.appendChild(card);
+                gsap.fromTo(card, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4 });
+            });
+        }
+
+        function renderFootballUniverse() {
+            const container = document.getElementById('football-grid');
+            FOOTBALL_NEWS_DB.forEach(data => {
+                const badgeClass = data.tag.toLowerCase().includes('uefa') ? 'badge-uefa' : 'badge-fifa';
+                const card = document.createElement('div');
+                card.className = "cyber-card";
+                card.innerHTML = `
+                    <div class="card-img-container">
+                        <div class="card-img-placeholder">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10zM2 12h20"/>
+                            </svg>
+                        </div>
+                        <span class="card-badge ${badgeClass}">${data.tag}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-meta"><span>${data.date}</span><span>SECURE FED DATA</span></div>
+                        <h3>${data.title}</h3>
+                        <p>${data.summary}</p>
+                    </div>
+                    <div class="card-footer">
+                        <span class="source-indicator">${data.source}</span>
+                        <a href="#" class="action-link">INTEL ROOM <span style="font-size:10px;">▶</span></a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Interactive Filter Buttons Event Listener Core
+        document.querySelectorAll('#gaming-filters .filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('#gaming-filters .filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                renderGamingUniverse(this.getAttribute('data-category'));
+            });
+        });
+
+        /* ==========================================
+           5. SYSTEM STARTUP SEQUENCER (GSAP & MAIN)
+           ========================================== */
+        window.addEventListener('DOMContentLoaded', () => {
+    init3DEngine();
+
+    const stages = [
+                { progress: 0.35, status: "ESTABLISHING SECURE API TUNNELS..." },
+                { progress: 0.70, status: "VERIFYING BLOCKCHAIN REALITY AUTHENTICITY..." },
+                { progress: 1.00, status: "DECOUPLED PIPELINES READY. ARJ.PVX RUNNING." }
+            ];
+
+            let timeline = gsap.timeline({
+                onComplete: () => {
+                    // Smooth Transition out loader interface once initialized
+                    gsap.to('#loader', {
+                        opacity: 0,
+                        duration: 0.8,
+                        onComplete: () => {
+                            document.getElementById('loader').style.display = 'none';
+                            executeInterfaceReveal();
+                        }
+                    });
+                }
+            });
+
+            stages.forEach((stage, idx) => {
+                timeline.to('#loader-bar', {
+                    width: `${stage.progress * 100}%`,
+                    duration: 0.6,
+                    ease: "power2.out",
+                    onStart: () => {
+                        document.getElementById('loader-status').innerText = stage.status;
+                    }
+                }, `+=${idx * 0.2}`);
+            });
+        });
+
+        function executeInterfaceReveal() {
+            // Orchestrate cinematic UI entry animations
+            gsap.from('header', { y: -50, opacity: 0, duration: 1, ease: "power4.out" });
+            gsap.from('#hero-title', { opacity: 0, x: -60, duration: 1.2, ease: "power3.out" });
+            gsap.from('.hero-tag', { opacity: 0, scale: 0.9, duration: 1, delay: 0.2 });
+            gsap.from('.ticker-wrap', { opacity: 0, y: 30, duration: 0.8, delay: 0.5 });
+        }
+
+        // Active link tracking logic mapping window viewport scrolls
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('nav a');
+            let currentId = 'hero';
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 200) {
+                    currentId = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${currentId}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
